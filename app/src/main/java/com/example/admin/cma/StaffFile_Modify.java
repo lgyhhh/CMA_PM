@@ -39,6 +39,7 @@ public class StaffFile_Modify extends AppCompatActivity {
     Toolbar toolbar;
     StaffFile staff;
     ImageView imageView;
+    String PreName;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -81,6 +82,7 @@ public class StaffFile_Modify extends AppCompatActivity {
        // editText5.setText(bundle.getString("location"));
 
 
+         PreName=staff.getName();
          imageView=(ImageView)findViewById(R.id.imageview);
         //Bitmap bitmap = BitmapFactory.decodeFile(staff.getFileImage());
 
@@ -160,7 +162,7 @@ public class StaffFile_Modify extends AppCompatActivity {
             public void onClick(View view) {
                 Toast.makeText(StaffFile_Modify.this, "保存成功！", Toast.LENGTH_SHORT).show();
                 //需要保存数据到数据库 TODO
-         /*
+
                final String s1=editText1.getText().toString();
                final String s2=editText2.getText().toString();
                final  String s3=editText3.getText().toString();
@@ -173,10 +175,10 @@ public class StaffFile_Modify extends AppCompatActivity {
                     new Thread(new Runnable() {
                         @Override
                         public void run() {
-                            postData(s1,s2,s3,s4,s5);
+                            postSave(PreName,s1,s2,s3,s4,s5);
                         }
                     }).start();
-                }*/
+                }
 
                 finish();
             }
@@ -262,19 +264,25 @@ public class StaffFile_Modify extends AppCompatActivity {
         });
     }
 
-    private void postData(String s1,String s2,String s3,String s4,String s5){
-        StaffFile t=new StaffFile(staff.getKey(),s1,s2,s3,s4,s5,staff.getFileImage());
+    private void postSave(String preName,String s1,String s2,String s3,String s4,String s5){
         Gson gson=new Gson();
-        String jsonStr=gson.toJson(t);
+        StaffFile temp=new StaffFile(0,s1,s2,s3,s4,s5,"jj");
+        String jsonStr=gson.toJson(temp);
+        String result="{\"name\":\""+preName+"\",\"staffFile\":"+jsonStr+"}";
         OkHttpClient okHttpClient=new OkHttpClient();
         //创建一个请求对象
         MediaType JSON=MediaType.parse("application/json; charset=utf-8");
-        RequestBody requestBody=RequestBody.create(JSON,jsonStr);
+        RequestBody requestBody=RequestBody.create(JSON,result);
+
+        //或者传一个name
+        RequestBody requestBody1=new FormBody.Builder().add("name",temp.getName()).build();
+
+        Log.d("生成的json:",result);
         Request request = new Request.Builder()
-                .url("http://10.0.2.2:8080/addJson")//url的地址
+                .url("http://119.23.38.100:8080/cma/StaffFile/modify")//url的地址
                 .post(requestBody)
                 .build();
-        try {
+        /*try {
             Response response=okHttpClient.newCall(request).execute();
             Log.i("StaffFile_Modify"," Here here11111");
             //判断请求是否成功
@@ -285,10 +293,35 @@ public class StaffFile_Modify extends AppCompatActivity {
                 handler.sendEmptyMessage(0);
             }
         } catch (IOException e) {
-            Log.d("JSONstr:","Save unsuccessfully!");
+            Log.d("JSONstr:","Delete unsuccessfully!");
             e.printStackTrace();
-        }
+        }*/
+        //同步上传
+        //异步post
+        okHttpClient.newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        Toast.makeText(StaffFile_Modify.this, "保存失败！", Toast.LENGTH_SHORT).show();
+                    }
+                });
+            }
+
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        Toast.makeText(StaffFile_Modify.this, "保存成功！", Toast.LENGTH_SHORT).show();
+                    }
+                });
+
+            }
+        });
     }
+
 
     private void showResponse(final Bitmap bitmap) {
         runOnUiThread(new Runnable() {

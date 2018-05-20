@@ -61,6 +61,8 @@ public class StaffFile_Main extends AppCompatActivity {
 
         //设置搜索文本监听
         listView.setTextFilterEnabled(true);
+
+        searchView.setFocusable(false);
         //当点击搜索按钮时触发
         searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
            //当点击搜索按钮触发该方法进行回调
@@ -226,5 +228,12 @@ public class StaffFile_Main extends AppCompatActivity {
                 return true;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+
+    @Override
+    protected void onResume(){
+        super.onResume();
+        initDangan();
     }
 }
